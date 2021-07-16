@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.DisplayName;
@@ -121,7 +124,7 @@ public class ObservableCreationTest {
 	 */
 	@Test
 	@DisplayName("Observable_fromFuture()_메서드연습__future를_사용하지_않는_동기식호출방식")
-	public void Observable_fromFuture_메서드연습__future를_사용하지_않는_동기식호출방식(){
+	public void Observable_fromFuture_Future를_사용하지_않는_동기식호출방식(){
 		long startTime = System.currentTimeMillis();
 
 		// GPS 좌표 조회 외부 API 호출
@@ -140,10 +143,60 @@ public class ObservableCreationTest {
 		System.out.println(getLogString("처리시간 :: " + String.valueOf((endTime - startTime)/1000.0) + " 초"));
 	}
 
+	@Test
+	@DisplayName("Observable_fromFuture()_메서드연습__Future를_사용한_비동기식호출방식")
+	public void Observable_fromFuture_Future를_사용한_비동기식호출방식(){
+		long startTime = System.currentTimeMillis();
+
+		Future<Gps> future = asyncFindAddressGps("성남 복정 2");
+
+		// 이메일 정합성 체크
+		checkEmailExist("abc@gmail.com");
+		// 비밀번호 정합성 체크
+		checkPasswordValidate("12345");
+
+		try {
+			future.get();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+
+		long endTime = System.currentTimeMillis();
+		System.out.println();
+		System.out.println(getLogString("처리시간 :: " + String.valueOf((endTime - startTime)/1000.0) + " 초"));
+	}
+
+	@Test
+	@DisplayName("Observable_fromFuture()_메서드연습_fromFuture를_이용한_리액티브방식")
+	public void Observable_fromFuture_메서드연습_fromFuture를_이용한_리액티브방식(){
+		long startTime = System.currentTimeMillis();
+
+		Future<Gps> future = asyncFindAddressGps("성남 복정 2");
+
+		// 이메일 정합성 체크
+		checkEmailExist("abc@gmail.com");
+		// 비밀번호 정합성 체크
+		checkPasswordValidate("12345");
+
+		Observable.fromFuture(future)
+			.subscribe(gpsData -> System.out.println(getLogString(String.valueOf(gpsData))));
+
+		long endTime = System.currentTimeMillis();
+		System.out.println();
+		System.out.println(getLogString("처리시간 :: " + String.valueOf((endTime - startTime)/1000.0) + " 초"));
+	}
+
 	public Gps syncFindAddressGps(String address){
-		System.out.println(getLogString("GPS 좌표 얻어오는 중 ... "));
+		System.out.println(getLogString(address + "의 GPS 좌표 얻어오는 중 ... (예상 : 5s)"));
 		delay(5);
 		return new Gps(100,200);
+	}
+
+	public Future<Gps> asyncFindAddressGps(String address){
+		CompletableFuture<Gps> future = CompletableFuture.supplyAsync(() -> syncFindAddressGps(address));
+		return future;
 	}
 
 	static class Gps{
@@ -182,12 +235,12 @@ public class ObservableCreationTest {
 
 	public void checkEmailExist(String email){
 		delay(2);
-		System.out.println(getLogString(" 이메일 체크 완료"));
+		System.out.println(getLogString(" 이메일 체크 완료 (예상 : 2s)"));
 	}
 
 	public void checkPasswordValidate(String password){
 		delay(1);
-		System.out.println(getLogString(" 패스워드 정합성 체크 완료"));
+		System.out.println(getLogString(" 패스워드 정합성 체크 완료 (예상 : 1s)"));
 	}
 
 	public void delay(int second){
