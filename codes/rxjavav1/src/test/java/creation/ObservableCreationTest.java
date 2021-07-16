@@ -1,4 +1,4 @@
-package step5;
+package creation;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -13,6 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
 
 public class ObservableCreationTest {
 
@@ -20,6 +21,32 @@ public class ObservableCreationTest {
 
 	public static String getLogString(String msg){
 		return Thread.currentThread().getName() + " | " + LocalDateTime.now().format(formatter) + " | " + msg;
+	}
+
+	@Test
+	@DisplayName("Observable_just_메서드연습")
+	public void Observable_just_메서드연습(){
+		Observable.just(1,2,3,4,5,6,7)
+			.subscribe(System.out::println);
+	}
+
+	/**
+	 * 참고)
+	 *   http://reactivex.io/RxJava/javadoc/io/reactivex/Observable.html#create-io.reactivex.ObservableOnSubscribe-
+	 */
+	@Test
+	@DisplayName("Observable_create_메서드연습_1_람다형식")
+	public void Observable_create_메서드연습_1_람다형식(){
+		Observable<Integer> observable = Observable.create(
+			(ObservableEmitter<Integer> emmiter) -> {
+				emmiter.onNext(100);
+				emmiter.onNext(200);
+				emmiter.onNext(300);
+				emmiter.onComplete();
+			}
+		);
+
+		observable.subscribe(System.out::println);
 	}
 
 	@Test
